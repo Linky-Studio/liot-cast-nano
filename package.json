@@ -3,13 +3,10 @@
   "main": "dist/full/index.js",
   "version": "0.0.0",
   "scripts": {
-    "build-full": "tsc --p tsconfig-full.json",
-    "build-min": "webpack"
+    "prebuild": "npm i",
+    "build": "tsc"
   },
   "devDependencies": {
-    "jest": "^26.6.3",
-    "ts-loader": "^8.0.17",
-    "webpack": "^5.24.4",
-    "webpack-cli": "^4.5.0"
+    "jest": "^26.6.3"
   }
 }
