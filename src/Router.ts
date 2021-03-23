@@ -19,4 +19,5 @@ export class Router {
         const pos = this.listeners.indexOf(listener);
         this.listeners.splice(pos, 1);
     }
+
 }

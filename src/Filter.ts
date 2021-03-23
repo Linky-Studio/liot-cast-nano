@@ -4,6 +4,8 @@ import {Operator} from "./Operator";
 
 export type Packet = unknown;
 
+const indent = (depth: number) => '  '.repeat(depth);
+
 export class Filter {
     condition: any;
     valid: boolean;
@@ -19,9 +21,10 @@ export class Filter {
     }
 
 
-    public static evaluateReduce = (parameters: unknown[], packet: Packet, reducer: Reducer): unknown => parameters.map(p => Filter.evaluateFilterNode(packet, p)).reduce(reducer);
+    public static evaluateReduce = (parameters: unknown[], packet: Packet, reducer: Reducer): unknown =>
+        parameters.map(p => Filter.evaluateFilterNode(packet, p)).reduce(reducer);
 
-    public static validateFilterNode(condition: unknown) {
+    public static validateFilter(condition: unknown) {
         //console.log('Validating node ', condition)
         if (typeof condition !== 'object' || condition === null || !(Object.keys(condition)[0] in Operators))
             return ['string', 'number'].indexOf(typeof condition) >= 0;
@@ -31,12 +34,10 @@ export class Filter {
             return false;
         //console.log('Valid array', array)
         for (const param of <unknown[]>array)
-            if (!this.validateFilterNode(param)) return false;
+            if (!this.validateFilter(param)) return false;
 
         return true;
     }
-
-    public static validateFilter = Filter.validateFilterNode;
 
     public static evaluateFilterNode(packet: Packet, condition: unknown) {
         switch (typeof condition) {
@@ -45,7 +46,9 @@ export class Filter {
                 const operator = Object.keys(condition)[0];
                 if (operator in Operators) {
                     const array = condition[operator as keyof object];
-                    return Array.isArray(array) && (<unknown[]>array).length ? (<{ [key: string]: Operator }>Operators)[operator](packet, array) : null;
+                    return Array.isArray(array) && (<unknown[]>array).length
+                        ? (<{ [key: string]: Operator }>Operators)[operator](packet, array)
+                        : null;
                 }
                 break;
             case 'string':
@@ -62,24 +65,20 @@ export class Filter {
         for (const line of lines) {
             if (line in Operators) {
                 remaining[depth]--;
-                output += `${spaces(depth)}{"${line}": [\n`;
+                output += `${indent(depth)}{"${line}": [\n`;
                 depth++;
                 remaining[depth] = 2;
             } else {
-                output += `${spaces(depth)}${line}${remaining[depth] == 2 ? ',' : ''}\n`;
+                output += `${indent(depth)}${line}${remaining[depth] == 2 ? ',' : ''}\n`;
                 remaining[depth]--;
                 if (!remaining[depth]) {
                     depth--;
-                    output += `${spaces(depth)}]}${remaining[depth] > 0 ? ',' : ''}\n`
+                    output += `${indent(depth)}]}${remaining[depth] > 0 ? ',' : ''}\n`
                 }
             }
         }
         while (depth--) output += ']}';
         return JSON.parse(output);
-
-        function spaces(depth: number) {
-            return '  '.repeat(depth);
-        }
     }
 
     public static extractParameter(packet: Packet, condition: string) {
